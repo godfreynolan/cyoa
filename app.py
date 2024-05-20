@@ -85,48 +85,38 @@ def get_caption(chat_response_object: Mapping) -> str:
         .strip()
     )
 
+def get_story(chat_response_object: Mapping) -> str:
+    return (
+        re.search(r"Story:(.*)(?:\n|$)", chat_response_object.content)
+        .group(1)
+        .strip()
+    )
+
+def get_choice1(chat_response_object: Mapping) -> str:
+    return (
+        re.search(r"Choice1:(.*)(?:\n|$)", chat_response_object.content)
+        .group(1)
+        .strip()
+    )
+
+def get_choice2(chat_response_object: Mapping) -> str:
+    return (
+        re.search(r"Choice2:(.*)(?:\n|$)", chat_response_object.content)
+        .group(1)
+        .strip()
+    )
+
 @app.route('/submit', methods=['POST'])
 def submit():
     choice = request.form['choice']
     cyoa = generate_cyoa(choice)
     caption_text = get_caption(cyoa)
-    return f"Caption. {caption_text}\n\n"
-
-
-    # story_pattern = r"Story: (.*?) Caption:"
-    # story_match = re.search(story_pattern, cyoa).group(1).strip()
-    # if story_match:
-    #     story_text = story_match
-    #     return f'CYOA: {story_text}'
-    # else:
-    #     return f"No match found. {story_match}\n\n {cyoa}"
-
-
-    # caption_pattern = r"Caption: (.*?) Choice1:"
-    # caption_match = re.search(caption_pattern, cyoa)
-    # caption_text = caption_match.group(1)
-
-    # choice1_pattern = r"Choice1: (.*?) Choice2:"
-    # choice1_match = re.search(choice1_pattern, cyoa)
-    # choice1_text = choice1_match.group(1)
-
-    # choice2_pattern = r"Choice2: (.*?)"
-    # choice2_match = re.search(choice2_pattern, cyoa)
-    # choice2_text = choice2_match.group(1)
-
-
-    # img_path=generate_image(caption_text)
-    # story=story_text
-    # button_name1 = choice1_text
-    # button_name2 = choice2_text
-    # return render_template('index.html', story=story-text, button_name1=choice1_text, button_name2=choice2_text, img_path=img_path)
-
-
-
+    story_text = get_story(cyoa)
+    choice1_text = get_choice1(cyoa)
+    choice2_text = get_choice2(cyoa)
+    img_path = generate_image(caption_text)
+    return render_template('index.html', story=story_text, button_name1=choice1_text, button_name2=choice2_text, img_path=img_path)
 
 
 if __name__ == '__main__':
     app.run(debug=True)
-
-
-
