@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Button Choice</title>
+</head>
+<body>
+    <center>
+        <img src="{{ img_path }}" alt="Choose Your Own Adventure" width="448" height="256">
+        <h4>{{ story }}</h4>
+        <form action="/submit" method="post">
+            <button type="submit" name="choice" value=" {{ button_name1 }} ">{{ button_name1 }}</button>
+            <button type="submit" name="choice" value=" {{ button_name2 }} ">{{ button_name2 }}</button>
+        </form>
+    </center>
+</body>
+</html>
