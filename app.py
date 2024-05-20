@@ -1,12 +1,12 @@
-import openai
-import config  
-from typing import Mapping
+from flask import Flask, request, render_template
+from openai import OpenAI
+import config
 import re
+from typing import Mapping
 
-client = openai.OpenAI(
-  api_key=config.OPENAI_API_KEY,
-)
+client = OpenAI(api_key=config.OPENAI_API_KEY)
 
+app = Flask(__name__)
 
 system_directive = """
 You, 'assistant', are telling me, 'user', an interactive choose-your-own-adventure story. Your repsonses are with labels so I can parse them and display them in a user interface.
@@ -49,19 +49,8 @@ Choice1: The wizard looks through the ogres pockets.
 Choice2: The wizard, fearing his spell will wear off, hurries away.
 """.strip()
 
-choice1="A wizard enters a magical dark forest."
-choice2="An explorer enters an interdimensional time machine."
 
-def generate_cyoa(choice):
-    response = client.chat.completions.create(
-            model="gpt-4",  
-            messages=[{"role": "system", "content": system_directive}, {"role": "user", "content": choice }], 
-            frequency_penalty=1.0, temperature=0.8
-    )
-        
-    return response.choices[0].message.content
-
-def generate_image(image_caption, dimensions=(1024, 1024)):
+def generate_image(image_caption, dimensions=(1792, 1024)):
     image_response = client.images.generate(
         model="dall-e-3",
         prompt=(image_caption[:1000]),
@@ -70,22 +59,74 @@ def generate_image(image_caption, dimensions=(1024, 1024)):
     )
     return image_response.data[0].url
 
-def get_caption_from_chat_response(chat_response_object):
+def generate_cyoa(choice):
+    messages_payload = [{"role": "system", "content": system_directive}, {"role": "user", "content": choice}]
+
+    chat_response = client.chat.completions.create(
+            model="gpt-4o",  
+            messages=messages_payload, 
+            frequency_penalty=1.0, temperature=0.8
+    )
+        
+    return chat_response.choices[0].message
+
+@app.route('/')
+def index():
+    img_path=generate_image("generate a picture that illustrates the concept of a choose your own adventure game")
+    story="Click on a button below to start your adventure!"
+    button_name1 = "A knight discovers a hidden enchanted castle"
+    button_name2 = "A scientist uncovers a portal to an alien world"
+    return render_template('index.html', story=story, button_name1=button_name1, button_name2=button_name2, img_path=img_path)
+
+def get_caption(chat_response_object: Mapping) -> str:
     return (
-        re.search(r"Caption:(.*)(?:\n|$)", chat_response_object)
+        re.search(r"Caption:(.*)(?:\n|$)", chat_response_object.content)
         .group(1)
+        .strip()
     )
 
-output = generate_cyoa(choice1)
-print(output)
-caption = get_caption_from_chat_response(output)
-print(caption)
-url = generate_image(caption)
-print(url)
+@app.route('/submit', methods=['POST'])
+def submit():
+    choice = request.form['choice']
+    cyoa = generate_cyoa(choice)
+    caption_text = get_caption(cyoa)
+    return f"Caption. {caption_text}\n\n"
 
-# todo - create a loop to keep the conversation going - just append it?
-# todo - add the image to the webpage. - base64 encode it?
-# todo - add it to the webpage.
+
+    # story_pattern = r"Story: (.*?) Caption:"
+    # story_match = re.search(story_pattern, cyoa).group(1).strip()
+    # if story_match:
+    #     story_text = story_match
+    #     return f'CYOA: {story_text}'
+    # else:
+    #     return f"No match found. {story_match}\n\n {cyoa}"
+
+
+    # caption_pattern = r"Caption: (.*?) Choice1:"
+    # caption_match = re.search(caption_pattern, cyoa)
+    # caption_text = caption_match.group(1)
+
+    # choice1_pattern = r"Choice1: (.*?) Choice2:"
+    # choice1_match = re.search(choice1_pattern, cyoa)
+    # choice1_text = choice1_match.group(1)
+
+    # choice2_pattern = r"Choice2: (.*?)"
+    # choice2_match = re.search(choice2_pattern, cyoa)
+    # choice2_text = choice2_match.group(1)
+
+
+    # img_path=generate_image(caption_text)
+    # story=story_text
+    # button_name1 = choice1_text
+    # button_name2 = choice2_text
+    # return render_template('index.html', story=story-text, button_name1=choice1_text, button_name2=choice2_text, img_path=img_path)
+
+
+
+
+
+if __name__ == '__main__':
+    app.run(debug=True)
 
 
 
