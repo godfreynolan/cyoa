@@ -9,7 +9,7 @@ client = OpenAI(api_key=config.OPENAI_API_KEY)
 app = Flask(__name__)
 
 system_directive = """
-You, 'assistant', are telling me, 'user', an interactive choose-your-own-adventure story. Your repsonses are with labels so I can parse them and display them in a user interface.
+You, 'assistant', are telling me, 'user', an interactive choose-your-own-adventure story. Your responses are with labels so I can parse them and display them in a user interface.
 Each step of the story, you present the following information.
 Story. The current state of the story.
 Caption. A detailed caption showing the current state of the story to be used as a DALL-E image prompt. It should be as consistent as possible with the previous caption.
@@ -28,7 +28,7 @@ assistant:
 Story: An aged wizard quietly enters a dark dungeon. He can tell by the echo of his footsteps that the chamber is large and seemingly empty.
 Caption: A grey-bearded wizard with a flowing blue cloak, a blue hat, a long grey beard, and a 6-foot wooden staff entering a dark dungeon with high-ceilings from the left side of the frame.
 Choice1: The wizard illuminates the dungeon
-Choice2: The wizard turns himself invisble
+Choice2: The wizard turns himself invisible
 
 user:
 The wizard illuminates the dungeon
